@@ -1,0 +1,220 @@
+@font-face {
+  font-family: "Neulis Cursive Medium";
+  src: url("../assets/fonts/Neulis_Cursive_Medium.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Helvetica Now Display";
+  src: url("../assets/fonts/HelveticaNowDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* Bold */
+@font-face {
+  font-family: "Helvetica Now Display";
+  src: url("../assets/fonts/HelveticaNowDisplay-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+* {
+  font-family: "Helvetica Now Display", sans-serif;
+  box-sizing: border-box;
+}
+
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-textColor: #464646;
+  --color-bgColor: #f7f6f6;
+  --color-yellow: #ffcf70;
+  --color-profileColor1: #1e1e1e;
+  --color-white: #ffffff;
+  --color-lightGray: #898989;
+  --color-veryLightGray: #dbdbdb;
+  --color-searchBox: #f1f1f1;
+  /* Gap */
+  --gap-xxxs: 2px;
+  --gap-xxs: 5px;
+  --gap-xs: 10px;
+  --gap-s: 15px;
+  --gap-m: 30px;
+  --gap-l: 36px;
+  /* Padding */
+  --padding-xxxs: 2px;
+  --padding-xxs: 5px;
+  --padding-xs: 10px;
+  --padding-s: 15px;
+  --padding-m: 30px;
+  /* Corner radius */
+  --radius-small: 25px;
+  --radius-medium: 45px;
+}
+
+@layer components {
+  .text-xxs {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 11px; /* 1rem = 16px */
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-xs {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 12px; /* 1rem = 16px */
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-s {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 14px; /* 1rem = 16px */
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-m {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 16px; /* 1rem = 16px */
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+
+  .text-l {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 18px; /* 1rem = 16px */
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-heading1 {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 24px; /* 1rem = 16px */
+    font-weight: 700;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-heading2 {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 20px; /* 1rem = 16px */
+    font-weight: 700;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-heading3 {
+    /* Font family */
+    font-family: "Helvetica Now Display", sans-serif;
+    /* Font size & weight */
+    font-size: 18px;
+    font-weight: 700;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+    letter-spacing: 0.5px;
+  }
+  .text-fancy {
+    /* Font family */
+    font-family: "Neulis Cursive Medium" !important;
+    /* Font size & weight */
+    font-size: 32px; /* 1rem = 16px */
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-textColor);
+    /* Line height & letter spacing */
+    line-height: normal;
+  }
+}
+
+/* Regular css classes here */
+
+/* Animations */
+/* Logo fade + scale animation */
+/* Logo fade + scale animation (now slower + smoother) */
+@keyframes logoPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1; /* stay fully visible for the 2s hold */
+    transform: scale(1);
+  }
+}
+
+/* Background color transition (slower + softer) */
+@keyframes bgFade {
+  0% {
+    background-color: #ffcf70;
+  }
+  100% {
+    background-color: #ffffff;
+  }
+}
+
+/* Apply animations */
+.onboarding-screen {
+  animation: bgFade 5s ease-in-out forwards;
+}
+
+.logo-anim {
+  animation: logoPop 5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
