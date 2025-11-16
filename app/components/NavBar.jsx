@@ -114,6 +114,25 @@ const UserIcon = ({ className }) => (
   </svg>
 );
 
+const CollabsIcon = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="21"
+    height="19"
+    viewBox="0 0 21 19"
+    fill="none"
+  >
+    <path
+      d="M11.4577 17.7082V15.6248C11.4577 12.7484 9.12581 10.4165 6.24935 10.4165C3.37287 10.4165 1.04102 12.7484 1.04102 15.6248V17.7082H11.4577ZM11.4577 17.7082H19.791V16.6665C19.791 13.5983 17.4591 11.4582 14.5827 11.4582C13.1105 11.4582 11.7809 12.1097 10.8336 13.1572M9.37435 4.1665C9.37435 5.89239 7.97523 7.2915 6.24935 7.2915C4.52346 7.2915 3.12435 5.89239 3.12435 4.1665C3.12435 2.44062 4.52346 1.0415 6.24935 1.0415C7.97523 1.0415 9.37435 2.44062 9.37435 4.1665ZM16.666 6.24984C16.666 7.40046 15.7333 8.33317 14.5827 8.33317C13.4321 8.33317 12.4993 7.40046 12.4993 6.24984C12.4993 5.09924 13.4321 4.1665 14.5827 4.1665C15.7333 4.1665 16.666 5.09924 16.666 6.24984Z"
+      stroke="currentColor"
+      stroke-width="2.08333"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+);
+
 function NavItem({ to, label, Icon }) {
   return (
     <NavLink to={to} end className="flex items-center justify-center ">
@@ -150,9 +169,15 @@ export default function NavBar() {
     <nav className="fixed bottom-[2px] left-0 right-0 px-xs pb-[env(safe-area-inset-bottom)]">
       <div className=" rounded-full bg-[rgba(0,0,0,0.90)] px-xs py-xs">
         <ul className="grid grid-cols-5  items-center">
-          <li className="flex justify-center">
-            <NavItem to="/home" label="Home" Icon={HomeIcon} />
-          </li>
+          {location.pathname === "/collabs" ? (
+            <li className="flex justify-center">
+              <NavItem to="/collabs" label="Collabs" Icon={CollabsIcon} />
+            </li>
+          ) : (
+            <li className="flex justify-center">
+              <NavItem to="/home" label="Home" Icon={HomeIcon} />
+            </li>
+          )}
           <li className="flex justify-center">
             <NavItem to="/services" label="Services" Icon={ServicesIcon} />
           </li>
