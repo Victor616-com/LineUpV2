@@ -13,7 +13,8 @@ function RequestCreate() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [mediaUrl, setMediaUrl] = useState(null);
-  const [tags, setTags] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [lookingFor, setLookingFor] = useState([]);
   const [location, setLocation] = useState("");
   const [paid, setPaid] = useState(false);
    // This is the value that has to be sent to supabase for paid_opportunity
@@ -27,7 +28,7 @@ function RequestCreate() {
   const { session } = UserAuth(); // current session
   const navigate = useNavigate();
 
-  const [availableTags, setAvailableTags] = useState([
+  const [availableGenres, setAvailableGenres] = useState([
     "Alternative",
     "Rock",
     "Metal",
@@ -38,6 +39,19 @@ function RequestCreate() {
     "Blues",
     "Indie",
   ]);
+
+  const [availableLookingFor, setAvailableLookingFor] = useState([
+    "Vocalist",
+    "Guitarist",
+    "Bassist",
+    "Drummer",
+    "Rapper",
+    "Keyboard Player",
+    "Composer",
+    "Producer",
+    "Visual Artist"
+  ]);
+
 
   const handlePost = async () => {
     if (!session) {
@@ -55,17 +69,19 @@ function RequestCreate() {
     // Has to be changed to the collab_request table and to add the necessary collumns (title, description, media_url, location, paid_opportunity(it is set as a boolean) , genres(send the tags),  ).
     // Create a media bucket for the collab request and change it in the upload media logic
     // For location you can set it so that if remote is true it sends a "remote" string, else send the location as a string
-    const { error } = await supabase.from("collab_requests").insert([
+  const { error } = await supabase.from("collab_requests").insert([
   {
     user_id: session.user.id,
     title,
     description,
     media_url: mediaUrl,
-    genres: tags,          // must be an array
+    genres,             
+    looking_for: lookingFor, 
     location,
-    paid_opportunity: paid // must be true/false/null
+    paid_opportunity: paid,
   }
-  ]);
+]);
+
 
 
     if (error) {
@@ -76,7 +92,8 @@ function RequestCreate() {
   setDescription("");
   setMedia(null);
   setMediaUrl(null);
-  setTags([]);
+  setGenres([]); 
+  setLookingFor([]);
   setLoading(false);
 
   navigate("/collabs");
@@ -85,6 +102,16 @@ function RequestCreate() {
 
   return (
     <div className="px-s flex flex-col gap-[25px] w-full pb-20">
+
+      {/* Looking For */}
+      <TagSelector
+        hashTag={false}
+        buttonName="Looking for"
+        sectionName="Looking for"
+        serchText="Search roles..."
+        availableTags={availableLookingFor}
+        onSave={(updatedLookingFor) => setLookingFor(updatedLookingFor)}
+      />
       {/* Title */}
       <NoteInputField
         value={title}
@@ -124,7 +151,7 @@ function RequestCreate() {
         as="textarea"
         value={description}
         onChange={setDescription}
-        placeholder="Write your request..."
+        placeholder="Describe your request..."
       />
 
       {/* Genres */}
@@ -132,9 +159,9 @@ function RequestCreate() {
         hashTag={false}
         buttonName="Add genres"
         sectionName="Genres"
-        serchText="Serch genres..."
-        availableTags={availableTags}
-        onSave={(updatedTags) => setTags(updatedTags)}
+        serchText="Search genres..."
+        availableTags={availableGenres}
+        onSave={(updatedGenres) => setGenres(updatedGenres)}
       />
 
       {/* Location */}

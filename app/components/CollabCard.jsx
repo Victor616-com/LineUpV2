@@ -23,7 +23,14 @@ export default function CollabCard({ item, user }) {
   Array.isArray(item.genres) && item.genres.length > 0
     ? item.genres[0]
     : "collab";
-    const firstName = user?.name ? user.name.split(" ")[0] : "Unknown";
+
+  const firstName = user?.name ? user.name.split(" ")[0] : "Unknown";
+
+  const primaryLookingFor =
+  Array.isArray(item.looking_for) && item.looking_for.length > 0
+    ? item.looking_for[0]
+    : "musician";
+
 
 
 
@@ -38,7 +45,7 @@ export default function CollabCard({ item, user }) {
             className="w-10 h-10 rounded-full object-cover"
             />
             <p className="text-m text-black font-medium">
-             {firstName} is looking for a #vocalist
+            {firstName} is looking for a #{primaryLookingFor}
             </p>
         </div>
 
@@ -66,7 +73,7 @@ export default function CollabCard({ item, user }) {
             item.genres.map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-[4px] rounded-full border border-black/20 text-sm text-black/60"
+                className="px-xs py-xxs rounded-full border border-black/60 text-m text-black/60"
               >
                 #{tag}
               </span>
