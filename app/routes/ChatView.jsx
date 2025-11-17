@@ -1,42 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { supabase } from "../supabaseClient";
+import {
+  fmtTime,
+  fmtDay,
+  sameDay,
+  initials,
+  toPublicAvatar,
+  UUID_RE,
+} from "../utils/chat.js";
+import { useProfilesCache } from "../hooks/useProfilesCache.js";
+import { useMarkMessagesAsRead } from "../hooks/useMarkMessagesAsRead.js";
 
 const PAGE_SIZE = 30;
-
-// ---------- Small helpers ----------
-function fmtTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-function fmtDay(iso) {
-  const d = new Date(iso);
-  return d.toLocaleDateString([], {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-function sameDay(a, b) {
-  const da = new Date(a),
-    db = new Date(b);
-  return (
-    da.getFullYear() === db.getFullYear() &&
-    da.getMonth() === db.getMonth() &&
-    da.getDate() === db.getDate()
-  );
-}
-function initials(name = "") {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "??";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-function toPublicAvatar(urlPath) {
-  if (!urlPath) return null;
-  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/profile_images/${urlPath}`;
-}
 
 // ---------- UI: Single bubble ----------
 function Bubble({ mine, msg, name, avatarUrl }) {
@@ -93,8 +69,7 @@ export default function ChatView() {
   const bottomRef = useRef(null);
   const isLoadingMoreRef = useRef(false);
 
-  // cache: sender_id -> { name, avatar_url }
-  const [profilesById, setProfilesById] = useState(new Map());
+  // cache: sender_id -> { name, avatar_url } - REMOVED
 
   // ---------- 1) Get current user ----------
   useEffect(() => {
@@ -208,8 +183,6 @@ export default function ChatView() {
   }, [hasMore, oldestLoadedAt]);
 
   // ---------- 5) Send a message ----------
-  const UUID_RE =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
   async function ensureIAmParticipant(tid, uid) {
     const { data, error } = await supabase
@@ -257,61 +230,11 @@ export default function ChatView() {
     setText("");
   }
 
-  // ---------- 5b) Mark messages as read ----------
-  async function markMessagesAsRead(msgs) {
-    if (!me || !msgs?.length) return;
+  // ---------- 5.b Mark messages as read ----------
+  useMarkMessagesAsRead(messages, me);
 
-    const rows = msgs
-      .filter((m) => m.sender_id !== me)
-      .map((m) => ({ message_id: m.id, user_id: me, status: "read" }));
-
-    if (!rows.length) return;
-
-    const { error } = await supabase
-      .from("message_status")
-      .upsert(rows, { onConflict: "message_id,user_id" });
-    if (error) console.error("markMessagesAsRead error:", error);
-  }
-
-  // call it whenever the visible list changes
-  useEffect(() => {
-    if (messages.length) markMessagesAsRead(messages);
-  }, [messages]);
-
-  // ---------- 6) Fetch any missing sender profiles & fill cache ----------
-  useEffect(() => {
-    // gather sender IDs that we don't have in cache yet
-    const missing = new Set();
-    for (const m of messages) {
-      if (!profilesById.has(m.sender_id)) missing.add(m.sender_id);
-    }
-    if (missing.size === 0) return;
-
-    (async () => {
-      const ids = Array.from(missing);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, name, avatar_url")
-        .in("id", ids);
-
-      if (error) {
-        console.error("profiles fetch error:", error);
-        return;
-      }
-
-      // merge into cache
-      setProfilesById((prev) => {
-        const next = new Map(prev);
-        for (const p of data || []) {
-          next.set(p.id, {
-            name: p.name || "",
-            avatar_url: toPublicAvatar(p.avatar_url),
-          });
-        }
-        return next;
-      });
-    })();
-  }, [messages, profilesById]);
+  // ---------- 6) Profiles cache ----------
+  const profilesById = useProfilesCache(messages);
 
   // ---------- 7) Group messages by day, then by consecutive sender ----------
   const grouped = useMemo(() => {

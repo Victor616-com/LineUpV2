@@ -10,7 +10,7 @@ export default function Layout() {
     path === "/" ||
     path === "/signup" ||
     path === "/signin" ||
-    path === "/chats"; // hides on both /chats and /chats/:id
+    path.startsWith("/chats"); // hides on both /chats and /chats/:id
 
   const hideNavBar =
     path === "/" ||
