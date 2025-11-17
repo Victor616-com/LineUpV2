@@ -27,8 +27,6 @@ export function useProfilesCache(messages) {
         .select("*")
         .in("id", ids);
 
-      console.log("PROFILE ROW:", p);
-
       console.log("📥 Fetch result:", data);
       console.log("⚠️ Fetch error:", error);
 

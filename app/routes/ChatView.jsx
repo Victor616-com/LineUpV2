@@ -1,16 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { supabase } from "../supabaseClient";
-import {
-  fmtTime,
-  fmtDay,
-  sameDay,
-  initials,
-  toPublicAvatar,
-  UUID_RE,
-} from "../utils/chat.js";
+import { fmtTime, fmtDay, sameDay, initials, UUID_RE } from "../utils/chat.js";
 import { useProfilesCache } from "../hooks/useProfilesCache.js";
 import { useMarkMessagesAsRead } from "../hooks/useMarkMessagesAsRead.js";
+import ChatTopNav from "../components/chats_components/ChatTopNav.jsx";
+import SendIcon from "../../assets/images/Send-icon2.svg";
 
 const PAGE_SIZE = 30;
 
@@ -69,8 +64,6 @@ export default function ChatView() {
   const bottomRef = useRef(null);
   const isLoadingMoreRef = useRef(false);
 
-  // cache: sender_id -> { name, avatar_url } - REMOVED
-
   // ---------- 1) Get current user ----------
   useEffect(() => {
     (async () => {
@@ -118,7 +111,7 @@ export default function ChatView() {
       setHasMore(page.length === PAGE_SIZE);
       // jump to bottom after initial load
       setTimeout(
-        () => bottomRef.current?.scrollIntoView({ behavior: "auto" }),
+        () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
         0,
       );
     })();
@@ -270,14 +263,52 @@ export default function ChatView() {
     return days;
   }, [messages, profilesById]);
 
-  if (!me)
-    return <div className="p-4 text-sm text-gray-500">Authenticating…</div>;
+  // ----- Chat title -----
+  const chatTitle = useMemo(() => {
+    if (!me) return "Chat";
+
+    const names = new Set();
+
+    for (const msg of messages) {
+      if (msg.sender_id === me) continue;
+
+      const prof = profilesById.get(msg.sender_id);
+      const name = prof?.name ?? msg.name ?? "";
+
+      if (name.trim()) {
+        names.add(name.trim());
+      }
+    }
+
+    if (names.size === 0) return "Chat";
+    return Array.from(names).join(", ");
+  }, [messages, profilesById, me]);
+
+  // chat Avatar URL (first non-me message)
+
+  const otherAvatar = useMemo(() => {
+    if (!me) return null;
+
+    for (const msg of messages) {
+      if (msg.sender_id !== me) {
+        const prof = profilesById.get(msg.sender_id);
+        return prof?.avatar_url ?? null;
+      }
+    }
+
+    return null;
+  }, [messages, profilesById, me]);
 
   // ---------- Render ----------
   return (
-    <div className="flex flex-col h-dvh pt-[0px]">
+    <div className="flex flex-col h-dvh pt-0">
+      {/* Top Nav */}
+      <ChatTopNav title={chatTitle} avatarUrl={otherAvatar} />
       {/* History */}
-      <div ref={listRef} className="flex-1 overflow-y-auto p-3 bg-gray-50 ">
+      <div
+        ref={listRef}
+        className="flex-1 overflow-y-auto p-3 pb-10 bg-gray-50 "
+      >
         {hasMore && (
           <div className="text-center text-xs text-gray-500 mb-2">
             Pull up to load earlier…
@@ -321,22 +352,25 @@ export default function ChatView() {
             })}
           </div>
         ))}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="h-2" />
       </div>
 
       {/* Composer */}
       <form
         onSubmit={sendMessage}
-        className="p-3 border-t border-veryLightGray flex gap-2 bg-white fixed bottom-0 w-full"
+        className="p-3 border-t border-veryLightGray flex items-center gap-2 bg-white"
       >
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message…"
-          className="flex-1 border border-veryLightGray rounded-xl px-3 py-2"
+          className="flex-1 border border-veryLightGray rounded-xl px-3 py-2 items-center text-sm focus:outline-none focus:ring-2 focus:ring-black"
         />
-        <button className="px-4 py-2 rounded-xl bg-black text-white">
-          Send
+        <button
+          type="submit"
+          className="flex w-8 h-8 justify-center items-center shrink-0 aspect-square rounded-full bg-black"
+        >
+          <img src={SendIcon} alt="Send" className="w-4 h-4" />
         </button>
       </form>
     </div>
