@@ -6,12 +6,15 @@ import PrivateRoute from "../components/PrivateRoute";
 import { Link } from "react-router";
 import Lottie from "lottie-react";
 import confettiAnimation from "../../assets/images/confetti.json";
+import StoriesSection from "../components/StoriesSection";
+import CollabRequestPreview from "../components/CollabRequestPreview";
 
 export default function Home() {
   const { session } = UserAuth();
   const [notes, setNotes] = useState([]);
   const [showGif, setShowGif] = useState(false);
   const [lastUserNoteId, setLastUserNoteId] = useState(null);
+  const noteRefs = useState(() => ({}))[0];
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -76,14 +79,27 @@ export default function Home() {
     fetchNotes();
   }, [session]);
 
+  useEffect(() => {
+    if (showGif && lastUserNoteId && noteRefs[lastUserNoteId]) {
+      noteRefs[lastUserNoteId].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [showGif, lastUserNoteId]);
   return (
     <PrivateRoute>
-      <main className="font-extrabold text-m px-s flex flex-col gap-s mb-[110px]">
-        <h1>Home</h1>
-        <div className="flex flex-col gap-m">
+      <main className="font-extrabold text-m  flex flex-col gap-s mb-[110px]">
+        <StoriesSection />
+        <CollabRequestPreview />
+        <div className="px-s flex flex-col gap-m">
           {notes.length ? (
             notes.map((note) => (
-              <div key={note.id} className="relative">
+              <div
+                key={note.id}
+                className="relative"
+                ref={(el) => (noteRefs[note.id] = el)}
+              >
                 <Note note={note} />
                 {showGif && note.id === lastUserNoteId && (
                   <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
