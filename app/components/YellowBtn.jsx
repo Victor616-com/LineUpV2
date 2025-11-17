@@ -13,7 +13,7 @@ function YellowBtn({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`bg-yellow w-fit px-[20px] py-xxs rounded-medium cursor-pointer ${className}`}
+      className={`bg-yellow flex flex-row gap-1 w-fit px-5 py-xs rounded-medium cursor-pointer ${className}`}
       type={type}
     >
       {loading ? loadingText : children}
