@@ -45,6 +45,9 @@ function RequestCreate() {
       return;
     }
     setLoading(true);
+
+    const sendLocation = remote ? "Remote" : location;
+
     if (!title || title.trim().length === 0) {
       setError("Please enter a title");
       setLoading(false);
@@ -62,7 +65,7 @@ function RequestCreate() {
     description,
     media_url: mediaUrl,
     genres: tags,          // must be an array
-    location,
+    location: sendLocation,
     paid_opportunity: paid // must be true/false/null
   }
   ]);
@@ -103,7 +106,7 @@ function RequestCreate() {
           // Upload right away
           const fileName = `${Date.now()}-${file.name}`;
           const { data, error } = await supabase.storage
-            .from("notes_media") // Change to the new media bucket
+            .from("collabs_media")
             .upload(fileName, file);
 
           if (error) {
@@ -112,7 +115,7 @@ function RequestCreate() {
           }
 
           const publicUrl = supabase.storage
-            .from("notes_media") // Change to the new media bucket
+            .from("collabs_media")
             .getPublicUrl(fileName).data.publicUrl;
 
           setMediaUrl(publicUrl);
