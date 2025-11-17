@@ -4,6 +4,32 @@ const AuthContext = createContext(null);
 
 export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(undefined);
+  const [themeId, setThemeId] = useState(null);
+  const themeColors = {
+    1: "#1E1E1E",
+    2: "#3F4D54",
+    3: "#575252",
+    4: "#3F4254",
+    5: "#4D3F54",
+    6: "#543F40",
+  };
+  const defaultColor = "#3F4D54";
+
+  // Get current theme
+  const fetchTheme = async (userId) => {
+    if (!userId) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("theme")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching theme:", error);
+    } else {
+      setThemeId(data?.theme || null);
+    }
+  };
 
   // Sign up
   const signUpNewUser = async (email, password, name) => {
@@ -60,10 +86,37 @@ export const AuthContextProvider = ({ children }) => {
       console.error("Error signing out:", error);
     }
   };
+  // Listen for session changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user?.id) fetchTheme(session.user.id);
+    });
 
+    const { subscription } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        if (session?.user?.id) fetchTheme(session.user.id);
+        else setThemeId(null);
+      },
+    );
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+  const themeColor = themeId ? themeColors[themeId] : defaultColor;
   return (
     <AuthContext.Provider
-      value={{ session, setSession, signUpNewUser, signInUser, signOut }}
+      value={{
+        session,
+        setSession,
+        signUpNewUser,
+        signInUser,
+        signOut,
+        themeId,
+        themeColor,
+      }}
     >
       {children}
     </AuthContext.Provider>
