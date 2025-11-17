@@ -5,23 +5,49 @@ import YellowBtn from "../YellowBtn";
 import { useState } from "react";
 
 function Onboarding3({ onContinue }) {
-  const [name, setName] = useState(null);
-  const [phoneNumber, setPhoneNumber] = useState(null);
-  const [yearOfBirth, setYearOfBirth] = useState(null);
-  const [city, setCity] = useState(null);
+  const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [yearOfBirth, setYearOfBirth] = useState("");
+  const [city, setCity] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { session } = UserAuth();
   const userId = session?.user?.id;
+  const validateForm = ({ name, phoneNumber, yearOfBirth, city }) => {
+    if (!name?.trim()) return "Please enter your full name.";
 
+    if (!phoneNumber?.trim()) return "Please enter your phone number.";
+    const phoneDigits = phoneNumber.replace(/\D/g, ""); // keep only numbers
+    if (phoneDigits.length < 6)
+      return "Phone number must contain at least 6 digits.";
+
+    if (!yearOfBirth?.trim()) return "Please enter your year of birth.";
+
+    const year = parseInt(yearOfBirth, 10);
+    const currentYear = new Date().getFullYear();
+    if (isNaN(year) || year < 1900 || year > currentYear)
+      return "Please enter a valid year of birth.";
+
+    if (!city?.trim()) return "Please enter your city.";
+
+    return null; // no errors
+  };
   const handleContinue = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    if (!name || name.trim().length === 0) {
-      setError("Please enter your full name.");
+    // Run validation once
+    const validationError = validateForm({
+      name,
+      phoneNumber,
+      yearOfBirth,
+      city,
+    });
+
+    if (validationError) {
+      setError(validationError);
       setLoading(false);
       return;
     }
@@ -56,6 +82,7 @@ function Onboarding3({ onContinue }) {
         onSubmit={handleContinue}
         className="flex flex-col w-full gap-m items-center"
       >
+        {error && <p className="text-m text-red-500 text-center">{error}</p>}
         <InputField
           label="First & last name"
           placeholder="Enter your first & last name"

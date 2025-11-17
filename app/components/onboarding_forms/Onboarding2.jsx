@@ -56,6 +56,7 @@ function Onboarding2({ onContinue }) {
   return (
     <div className="flex flex-col gap-m w-[225px] items-center">
       <img src={logo} alt="LineUp-logo" className="h-[30px] w-auto" />
+      {error && <p className="text-m text-red-500 text-center">{error}</p>}
       {cards.map((card) => (
         <div
           key={card.id}
@@ -65,13 +66,16 @@ function Onboarding2({ onContinue }) {
                   ? "border-[#808080]"
                   : "border-[#b7b7b7]"
               }`}
-          onClick={() => setSelectedCard(card.id)}
+          onClick={() => {
+            setSelectedCard(card.id);
+            setError("");
+          }}
         >
           <p className="text-heading2">{card.heading}</p>
           <p className="text-m text-center">{card.description}</p>
           <div
             className={`w-6 h-6 flex items-center justify-center rounded-full border border-[#b7b7b7] transition-all duration-200
-            ${selectedCard === card.id ? "bg-yellow" : "bg-transparent"}`}
+            ${selectedCard === card.id ? "bg-yellow border-transparent" : "bg-transparent"}`}
           >
             <img src={checkIcon} alt="check" />
           </div>

@@ -97,7 +97,9 @@ const SignUp = () => {
             >
               Sign Up
             </YellowBtn>
-            {error && <p className="text-red-500 text-center">{error}</p>}
+            {error && (
+              <p className="text-m text-red-500 text-center">{error}</p>
+            )}
             <p>
               Already have an account?
               <Link className="text-blue-500" to="/signin">
