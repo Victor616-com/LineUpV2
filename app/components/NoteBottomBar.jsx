@@ -74,7 +74,7 @@ const NoteBottomBar = forwardRef(({ noteId, onLike }, ref) => {
           .select("id")
           .eq("note_id", noteId)
           .eq("user_id", session.user.id)
-          .single();
+          .maybeSingle();
 
         setLiked(!!userLike);
       }

@@ -14,6 +14,7 @@ function NoteCreate() {
   const [description, setDescription] = useState("");
   const [error, setError] = useState(null);
   const [mediaUrl, setMediaUrl] = useState(null);
+  const [media, setMedia] = useState(null);
 
   const { session } = UserAuth(); // current session
   const navigate = useNavigate();

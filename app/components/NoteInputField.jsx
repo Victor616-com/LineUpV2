@@ -98,8 +98,8 @@ function NoteInputField({
           className={`${inputClasses}`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={() => setIsFocused?.(true)}
+          onBlur={() => setIsFocused?.(false)}
         />
       )}
 
