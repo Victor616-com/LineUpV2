@@ -7,7 +7,6 @@ const COUNTRY_CODES = [
   { code: "+47", flag: "🇳🇴" }, // Norway
   { code: "+46", flag: "🇸🇪" }, // Sweden
   { code: "+299", flag: "🇬🇱" }, // Greenland (Denmark)
-  { code: "+358", flag: "🇦🇽" }, // Åland Islands (Finland)
 ];
 
 const InputField = ({

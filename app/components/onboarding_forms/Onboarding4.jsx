@@ -62,6 +62,7 @@ function Onboarding4({ onContinue }) {
 
   return (
     <div className="flex flex-col w-[270px] gap-[20px] items-center">
+      {error && <p className="text-m text-red-500 text-center">{error}</p>}
       <h2 className="text-heading3 w-full">I am looking to</h2>
       <div className="w-full flex flex-col gap-s">
         {cards.map((card) => (
