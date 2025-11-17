@@ -45,15 +45,23 @@ function NoteCreate() {
     }
     setError("");
 
-    const { error } = await supabase.from("notes").insert([
-      {
-        title,
-        description,
-        media_url: mediaUrl,
-        tags: tags.length > 0 ? tags : null,
-        user_id: session.user.id,
-      },
-    ]);
+    const { data: insertedData, error } = await supabase
+      .from("notes")
+      .insert([
+        {
+          title,
+          description,
+          media_url: mediaUrl,
+          tags: tags.length > 0 ? tags : null,
+          user_id: session.user.id,
+        },
+      ])
+      .select(); // select inserted row
+
+    if (!error) {
+      const newNoteId = insertedData[0].id;
+      navigate("/home", { state: { justPostedNoteId: newNoteId } });
+    }
 
     if (error) console.error("Insert error:", error);
     else {
