@@ -19,15 +19,15 @@ export default function Home() {
         .from("notes")
         .select(
           `
-      id,
-      title,
-      description,
-      media_url,
-      user_id,
-      tags,
-      created_at,
-      profiles!inner(name, avatar_url)
-    `,
+          id,
+          title,
+          description,
+          media_url,
+          user_id,
+          tags,
+          created_at,
+          profiles!inner(name, avatar_url)
+        `,
         )
         .order("created_at", { ascending: false });
 
