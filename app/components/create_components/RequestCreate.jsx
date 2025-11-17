@@ -15,7 +15,10 @@ function RequestCreate() {
   const [mediaUrl, setMediaUrl] = useState(null);
   const [tags, setTags] = useState([]);
   const [location, setLocation] = useState("");
-  const [paid, setPaid] = useState(false); // This is the value that has to be sent to supabase for paid_opportunity
+  const [paid, setPaid] = useState(false);
+   // This is the value that has to be sent to supabase for paid_opportunity
+  const [media, setMedia] = useState(null);
+  const [error, setError] = useState(null);
 
   const [locationFocused, setLocationFocused] = useState(false);
   const [remote, setRemote] = useState(false);
@@ -52,30 +55,34 @@ function RequestCreate() {
     // Has to be changed to the collab_request table and to add the necessary collumns (title, description, media_url, location, paid_opportunity(it is set as a boolean) , genres(send the tags),  ).
     // Create a media bucket for the collab request and change it in the upload media logic
     // For location you can set it so that if remote is true it sends a "remote" string, else send the location as a string
-    const { error } = await supabase.from("notes").insert([
-      {
-        title,
-        description,
-        media_url: mediaUrl,
-        tags: tags.length > 0 ? tags : null,
-        user_id: session.user.id, // stays the same
-      },
-    ]);
+    const { error } = await supabase.from("collab_requests").insert([
+  {
+    user_id: session.user.id,
+    title,
+    description,
+    media_url: mediaUrl,
+    genres: tags,          // must be an array
+    location,
+    paid_opportunity: paid // must be true/false/null
+  }
+  ]);
 
-    if (error) console.error("Insert error:", error);
-    else {
-      // Set these to the updated ones.
-      // I don't think they matter because it redirects you to the home page (change it to send you to /collabs)
-      //
-      setTitle("");
-      setDescription("");
-      setMedia(null);
-      setMediaUrl(null);
-      setTags([]);
-      setLoading(false);
-      navigate("/home");
-    }
-  };
+
+    if (error) {
+  console.error("Insert error:", error);
+  } else {
+
+  setTitle("");
+  setDescription("");
+  setMedia(null);
+  setMediaUrl(null);
+  setTags([]);
+  setLoading(false);
+
+  navigate("/collabs");
+  }
+};
+
   return (
     <div className="px-s flex flex-col gap-[25px] w-full pb-20">
       {/* Title */}
