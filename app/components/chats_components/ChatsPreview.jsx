@@ -118,7 +118,6 @@ export function ChatsPreview({ threads = [], currentUserId, usersMap }) {
   return (
     <div className="w-full max-w-md mx-auto p-3">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold">Chats</h2>
         <span className="text-xs text-gray-500">
           {sorted.length} thread{sorted.length === 1 ? "" : "s"}
         </span>
