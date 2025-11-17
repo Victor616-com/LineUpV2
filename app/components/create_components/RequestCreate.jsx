@@ -156,6 +156,7 @@ function RequestCreate() {
             onToggle={(val) => {
               setRemote(val);
               setShowRemote(val); // keep visible if enabled
+              if (val) setLocation("");
               console.log(val);
             }}
           />

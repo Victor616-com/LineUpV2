@@ -7,7 +7,7 @@ function SliderButton({ on, onToggle }) {
       className={`
         w-15 h-7 flex items-center rounded-full px-1 py-3 cursor-pointer
         transition-colors duration-300
-        ${on ? "bg-yellow" : "bg-gray-300"}
+        ${on ? "bg-yellow" : "bg-searchBox"}
       `}
     >
       <div
