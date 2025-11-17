@@ -15,12 +15,14 @@ function RequestCreate() {
   const [mediaUrl, setMediaUrl] = useState(null);
   const [tags, setTags] = useState([]);
   const [location, setLocation] = useState("");
-  const [paid, setPaid] = useState(false);
+  const [paid, setPaid] = useState(false); // This is the value that has to be sent to supabase for paid_opportunity
+
+  const [locationFocused, setLocationFocused] = useState(false);
   const [remote, setRemote] = useState(false);
+  const [showRemote, setShowRemote] = useState(false);
+
   const { session } = UserAuth(); // current session
   const navigate = useNavigate();
-  const [locationFocused, setLocationFocused] = useState(false);
-  const [showRemote, setShowRemote] = useState(false);
 
   const [availableTags, setAvailableTags] = useState([
     "Alternative",
@@ -47,15 +49,16 @@ function RequestCreate() {
     }
     setError("");
 
-    // Has to be changed to the collab_request table and to add the necessary collumns.
+    // Has to be changed to the collab_request table and to add the necessary collumns (title, description, media_url, location, paid_opportunity(it is set as a boolean) , genres(send the tags),  ).
     // Create a media bucket for the collab request and change it in the upload media logic
+    // For location you can set it so that if remote is true it sends a "remote" string, else send the location as a string
     const { error } = await supabase.from("notes").insert([
       {
         title,
         description,
         media_url: mediaUrl,
         tags: tags.length > 0 ? tags : null,
-        user_id: session.user.id,
+        user_id: session.user.id, // stays the same
       },
     ]);
 
@@ -84,6 +87,7 @@ function RequestCreate() {
         }}
         placeholder="Write a title"
       />
+
       {/* Add media */}
       <AddMediaBtn
         media={async (file) => {
@@ -107,6 +111,7 @@ function RequestCreate() {
           setMediaUrl(publicUrl);
         }}
       />
+
       {/* Description */}
       <NoteInputField
         as="textarea"
@@ -114,6 +119,7 @@ function RequestCreate() {
         onChange={setDescription}
         placeholder="Write your request..."
       />
+
       {/* Genres */}
       <TagSelector
         hashTag={false}
@@ -123,6 +129,7 @@ function RequestCreate() {
         availableTags={availableTags}
         onSave={(updatedTags) => setTags(updatedTags)}
       />
+
       {/* Location */}
       <NoteInputField
         value={location}
@@ -136,7 +143,9 @@ function RequestCreate() {
         disabled={remote}
         placeholderOnDisable="Remote"
       />
-
+      {/*  This is the logic to show hide the remote slider. You can remove the console.log() if you want. 
+             I added it so it's easier to troubleshoot later on.
+        */}
       {(locationFocused || showRemote) && (
         <div
           className="flex flex-row gap-xs"
@@ -153,6 +162,7 @@ function RequestCreate() {
           <p className="text-m">Remote</p>
         </div>
       )}
+
       <div className="flex flex-row gap-xs">
         <SliderButton
           on={paid}
