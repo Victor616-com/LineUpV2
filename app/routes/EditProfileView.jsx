@@ -10,18 +10,15 @@ const EditProfileView = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [editingField, setEditingField] = useState(null);
-
-  const [allTags, setAllTags] = useState([
-    "Band",
-    "Jam Sessions",
-    "New Friends",
-    "Collaboration",
-    "Live Shows",
-    "Networking",
-  ]); // predefined options
-  const [tagSearch, setTagSearch] = useState("");
-
-  const [editingLookingFor, setEditingLookingFor] = useState(false);
+  const [slectedTheme, setSelectedTheme] = useState("1");
+  const colorThemes = [
+    { id: 1, color: "#1E1E1E" },
+    { id: 2, color: "#3F4D54" },
+    { id: 3, color: "#575252" },
+    { id: 4, color: "#3F4254" },
+    { id: 5, color: "#4D3F54" },
+    { id: 6, color: "#543F40" },
+  ];
 
   console.log(currentUserId, id);
   // Fetch profile
@@ -29,7 +26,7 @@ const EditProfileView = () => {
     const fetchProfile = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("name, avatar_url, bio, about_me, looking_for, genres")
+        .select("name, avatar_url, bio, about_me, looking_for, genres, theme")
         .eq("id", id)
         .single();
 
@@ -121,7 +118,7 @@ const EditProfileView = () => {
 
       <div className="flex flex-col px-s">
         {/* Main box */}
-        <div className="flex flex-col p-s border border-veryLightGray rounded-small mt-[20px]">
+        <div className="flex flex-col p-s border border-veryLightGray rounded-small mt-5 mb-[100px]">
           {/* Name */}
           <div className="flex flex-row ">
             <div className="w-[100px] py-xs">
@@ -297,6 +294,31 @@ const EditProfileView = () => {
             ]}
             label="Genres"
           />
+          <div className="flex flex-row mt-5 justify-between items-center">
+            <p className="text-m">Theme</p>
+            <div className="flex flex-row gap-2">
+              {colorThemes.map((theme) => {
+                const isSelected = profile.theme === String(theme.id);
+                return (
+                  <div
+                    key={theme.id}
+                    className={`w-9 h-9 rounded-full cursor-pointer border-2 ${
+                      isSelected ? "border-primary" : "border-transparent"
+                    }`}
+                    style={{ backgroundColor: theme.color }}
+                    onClick={() => {
+                      setProfile((prev) => ({
+                        ...prev,
+                        theme: String(theme.id),
+                      })); // update locally
+                      updateProfileField("theme", String(theme.id)); // send to Supabase
+                      window.location.reload();
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
