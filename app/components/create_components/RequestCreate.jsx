@@ -1,0 +1,226 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { UserAuth } from "../../context/AuthContext";
+import { supabase } from "../../supabaseClient";
+import NoteInputField from "../NoteInputField";
+import AddMediaBtn from "../AddMediaBtn";
+import TagSelector from "../CreateTagSelector";
+import SliderButton from "../SliderButton";
+import YellowBtn from "../YellowBtn";
+
+function RequestCreate() {
+  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [mediaUrl, setMediaUrl] = useState(null);
+  const [genres, setGenres] = useState([]);
+  const [lookingFor, setLookingFor] = useState([]);
+  const [location, setLocation] = useState("");
+  const [paid, setPaid] = useState(false);
+   // This is the value that has to be sent to supabase for paid_opportunity
+  const [media, setMedia] = useState(null);
+  const [error, setError] = useState(null);
+
+  const [locationFocused, setLocationFocused] = useState(false);
+  const [remote, setRemote] = useState(false);
+  const [showRemote, setShowRemote] = useState(false);
+
+  const { session } = UserAuth(); // current session
+  const navigate = useNavigate();
+
+  const [availableGenres, setAvailableGenres] = useState([
+    "Alternative",
+    "Rock",
+    "Metal",
+    "Pop",
+    "Rap",
+    "R&B",
+    "Country",
+    "Blues",
+    "Indie",
+  ]);
+
+  const [availableLookingFor, setAvailableLookingFor] = useState([
+    "Vocalist",
+    "Guitarist",
+    "Bassist",
+    "Drummer",
+    "Rapper",
+    "Keyboard Player",
+    "Composer",
+    "Producer",
+    "Visual Artist"
+  ]);
+
+
+  const handlePost = async () => {
+    if (!session) {
+      alert("You must be logged in to post!");
+      return;
+    }
+    setLoading(true);
+    if (!title || title.trim().length === 0) {
+      setError("Please enter a title");
+      setLoading(false);
+      return;
+    }
+    setError("");
+
+    // Has to be changed to the collab_request table and to add the necessary collumns (title, description, media_url, location, paid_opportunity(it is set as a boolean) , genres(send the tags),  ).
+    // Create a media bucket for the collab request and change it in the upload media logic
+    // For location you can set it so that if remote is true it sends a "remote" string, else send the location as a string
+  const { error } = await supabase.from("collab_requests").insert([
+  {
+    user_id: session.user.id,
+    title,
+    description,
+    media_url: mediaUrl,
+    genres,             
+    looking_for: lookingFor, 
+    location,
+    paid_opportunity: paid,
+  }
+]);
+
+
+
+    if (error) {
+  console.error("Insert error:", error);
+  } else {
+
+  setTitle("");
+  setDescription("");
+  setMedia(null);
+  setMediaUrl(null);
+  setGenres([]); 
+  setLookingFor([]);
+  setLoading(false);
+
+  navigate("/collabs");
+  }
+};
+
+  return (
+    <div className="px-s flex flex-col gap-[25px] w-full pb-20">
+
+      {/* Looking For */}
+      <TagSelector
+        hashTag={false}
+        buttonName="Looking for"
+        sectionName="Looking for"
+        serchText="Search roles..."
+        availableTags={availableLookingFor}
+        onSave={(updatedLookingFor) => setLookingFor(updatedLookingFor)}
+      />
+      {/* Title */}
+      <NoteInputField
+        value={title}
+        onChange={(v) => {
+          setTitle(v);
+          setError(""); // ✅ clear error on input change
+        }}
+        placeholder="Write a title"
+      />
+
+      {/* Add media */}
+      <AddMediaBtn
+        media={async (file) => {
+          setMedia(file);
+
+          // Upload right away
+          const fileName = `${Date.now()}-${file.name}`;
+          const { data, error } = await supabase.storage
+            .from("notes_media") // Change to the new media bucket
+            .upload(fileName, file);
+
+          if (error) {
+            console.error("Upload error:", error);
+            return;
+          }
+
+          const publicUrl = supabase.storage
+            .from("notes_media") // Change to the new media bucket
+            .getPublicUrl(fileName).data.publicUrl;
+
+          setMediaUrl(publicUrl);
+        }}
+      />
+
+      {/* Description */}
+      <NoteInputField
+        as="textarea"
+        value={description}
+        onChange={setDescription}
+        placeholder="Describe your request..."
+      />
+
+      {/* Genres */}
+      <TagSelector
+        hashTag={false}
+        buttonName="Add genres"
+        sectionName="Genres"
+        serchText="Search genres..."
+        availableTags={availableGenres}
+        onSave={(updatedGenres) => setGenres(updatedGenres)}
+      />
+
+      {/* Location */}
+      <NoteInputField
+        value={location}
+        onChange={(v) => {
+          setLocation(v);
+          setError("");
+        }}
+        placeholder="Add location"
+        isFocused={locationFocused}
+        setIsFocused={setLocationFocused}
+        disabled={remote}
+        placeholderOnDisable="Remote"
+      />
+      {/*  This is the logic to show hide the remote slider. You can remove the console.log() if you want. 
+             I added it so it's easier to troubleshoot later on.
+        */}
+      {(locationFocused || showRemote) && (
+        <div
+          className="flex flex-row gap-xs"
+          onMouseDown={(e) => e.preventDefault()} // prevents input from losing focus on click
+        >
+          <SliderButton
+            on={remote}
+            onToggle={(val) => {
+              setRemote(val);
+              setShowRemote(val); // keep visible if enabled
+              if (val) setLocation("");
+              console.log(val);
+            }}
+          />
+          <p className="text-m">Remote</p>
+        </div>
+      )}
+
+      <div className="flex flex-row gap-xs">
+        <SliderButton
+          on={paid}
+          onToggle={(val) => {
+            setPaid(val);
+            console.log(val);
+          }}
+        />
+        <p className="text-m">Paid opportunity</p>
+      </div>
+
+      {/* Post btn */}
+      <div className="w-full flex justify-end">
+        <YellowBtn
+          loading={loading}
+          loadingText="posting..."
+          onClick={handlePost}
+        >
+          Post
+        </YellowBtn>
+      </div>
+    </div>
+  );
+}
+
+export default RequestCreate;

@@ -7,7 +7,7 @@ import React, {
 import { supabase } from "../supabaseClient";
 import { UserAuth } from "../context/AuthContext";
 
-const NoteBottomBar = forwardRef(({ noteId, onLike }, ref) => {
+const NoteBottomBar = forwardRef(({ noteId, onLike = () => {} }, ref) => {
   const { session } = UserAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -74,7 +74,7 @@ const NoteBottomBar = forwardRef(({ noteId, onLike }, ref) => {
           .select("id")
           .eq("note_id", noteId)
           .eq("user_id", session.user.id)
-          .single();
+          .maybeSingle();
 
         setLiked(!!userLike);
       }

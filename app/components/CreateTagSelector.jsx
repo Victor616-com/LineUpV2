@@ -19,22 +19,17 @@ const plusIcon = (
   </svg>
 );
 
-function TagSelector({ onSave }) {
+function TagSelector({
+  onSave,
+  availableTags,
+  buttonName,
+  sectionName,
+  serchText,
+  hashTag,
+}) {
   const [open, setOpen] = useState(false);
   const [tags, setTags] = useState([]); // selected tags
   const [search, setSearch] = useState("");
-  const [availableTags, setAvailableTags] = useState([
-    "question",
-    "concert",
-    "equipment",
-    "tutorial",
-    "music-theory",
-    "recording",
-    "guitar",
-    "singing",
-    "saxophone",
-    "keys",
-  ]);
 
   // Filter available tags that are not selected and match search
   const filteredTags = useMemo(() => {
@@ -79,7 +74,7 @@ function TagSelector({ onSave }) {
                     onClick={() => handleRemoveTag(tag)}
                     className="flex flex-row items-center gap-xxs"
                   >
-                    <NoteTag>
+                    <NoteTag hashTag={hashTag}>
                       {tag}
                       <img src={xIcon} alt="" className="ml-[8px]" />
                     </NoteTag>
@@ -87,7 +82,7 @@ function TagSelector({ onSave }) {
                 ))}
               </div>
             ) : (
-              <p className="text-m text-black">Tags</p>
+              <p className="text-m text-black">{sectionName}</p>
             )}
 
             <button className="text-m text-primary" onClick={saveTags}>
@@ -99,7 +94,7 @@ function TagSelector({ onSave }) {
           <SearchInput
             value={search}
             onChange={setSearch}
-            placeholder="Search tags..."
+            placeholder={serchText}
             icon={true}
           />
 
@@ -107,14 +102,14 @@ function TagSelector({ onSave }) {
           <div className="flex flex-wrap gap-xs">
             {filteredTags.map((tag) => (
               <div key={tag} onClick={() => handleAddTag(tag)}>
-                <NoteTag>{tag}</NoteTag>
+                <NoteTag hashTag={hashTag}>{tag}</NoteTag>
               </div>
             ))}
 
             {/* Add new tag if nothing matches */}
             {filteredTags.length === 0 && search.trim() !== "" && (
               <div className="flex items-center mt-2 gap-2">
-                <NoteTag>{search}</NoteTag>
+                <NoteTag hashTag={hashTag}>{search}</NoteTag>
                 <button
                   className="text-m text-primary"
                   onClick={() => handleAddTag(search.trim())}
@@ -126,7 +121,9 @@ function TagSelector({ onSave }) {
           </div>
 
           {tags.length >= 2 && (
-            <p className="text-m">You can only add up to 2 tags.</p>
+            <p className="text-m">
+              You can only add up to 2 {sectionName.toLowerCase()}.
+            </p>
           )}
         </div>
       ) : (
@@ -137,14 +134,16 @@ function TagSelector({ onSave }) {
           {tags.length > 0 && (
             <div className="flex flex-row gap-xxs">
               {tags.map((tag) => (
-                <NoteTag key={tag}>{tag}</NoteTag>
+                <NoteTag hashTag={hashTag} key={tag}>
+                  {tag}
+                </NoteTag>
               ))}
             </div>
           )}
 
           <div className="flex flex-row gap-xs items-center">
             {plusIcon}
-            <p className="text-m">Add tags</p>
+            <p className="text-m">{buttonName}</p>
           </div>
         </div>
       )}

@@ -267,7 +267,7 @@ function Note({ note }) {
       )}
 
       <p className="text-m wrap-break-word w-full px-xs">{note.description}</p>
-      <NoteBottomBar ref={noteBottomBarRef} noteId={note.id} onLike />
+      <NoteBottomBar ref={noteBottomBarRef} noteId={note.id} />
     </div>
   );
 }

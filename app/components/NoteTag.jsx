@@ -1,9 +1,9 @@
 import React from "react";
 
-function NoteTag({ children }) {
+function NoteTag({ children, hashTag = true }) {
   return (
     <div className="w-fit flex flex-row items-center justify-center px-2 py-[2px] rounded-full border border-[#555555]">
-      <p className="text-m">#</p>
+      {hashTag && <p className="text-m">#</p>}
       {children}
     </div>
   );
