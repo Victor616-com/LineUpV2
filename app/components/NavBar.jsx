@@ -135,7 +135,7 @@ const CollabsIcon = ({ className }) => (
 
 function NavItem({ to, label, Icon }) {
   return (
-    <NavLink to={to} end className="flex items-center justify-center ">
+    <NavLink to={to} end className="flex items-center justify-center  ">
       {({ isActive }) => (
         <div
           className={[
@@ -166,7 +166,7 @@ export default function NavBar() {
     ? `/profile/${session.user.id}`
     : "/signin";
   return (
-    <nav className="fixed bottom-[2px] left-0 right-0 px-xs pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-[2px] left-0 right-0 px-xs pb-[env(safe-area-inset-bottom)] z-105">
       <div className=" rounded-full bg-[rgba(0,0,0,0.90)] px-xs py-xs">
         <ul className="grid grid-cols-5  items-center">
           {location.pathname === "/collabs" ? (

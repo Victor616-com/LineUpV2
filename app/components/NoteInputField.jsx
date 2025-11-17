@@ -1,6 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  isFocused,
+  setIsFocused,
+} from "react";
 
-function NoteInputField({ value, onChange, placeholder, as = "input" }) {
+function NoteInputField({
+  value,
+  onChange,
+  placeholder,
+  as = "input",
+  setIsFocused,
+  disabled = false,
+  placeholderOnDisable,
+}) {
   const [isEditing, setIsEditing] = useState(true);
   const showDone = value.trim().length > 0;
   const textareaRef = useRef(null);
@@ -71,7 +85,6 @@ function NoteInputField({ value, onChange, placeholder, as = "input" }) {
       {as === "textarea" ? (
         <textarea
           ref={textareaRef}
-          autoFocus
           placeholder={placeholder}
           className={`${inputClasses} overflow-hidden resize-none`}
           value={value}
@@ -79,12 +92,14 @@ function NoteInputField({ value, onChange, placeholder, as = "input" }) {
         />
       ) : (
         <input
-          autoFocus
+          disabled={disabled}
           type="text"
-          placeholder={placeholder}
+          placeholder={disabled ? placeholderOnDisable : placeholder}
           className={`${inputClasses}`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
       )}
 
