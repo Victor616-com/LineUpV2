@@ -7,7 +7,7 @@ import React, {
 import { supabase } from "../supabaseClient";
 import { UserAuth } from "../context/AuthContext";
 
-const NoteBottomBar = forwardRef(({ noteId, onLike }, ref) => {
+const NoteBottomBar = forwardRef(({ noteId, onLike = () => {} }, ref) => {
   const { session } = UserAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
