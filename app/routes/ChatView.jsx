@@ -6,11 +6,12 @@ import { useProfilesCache } from "../hooks/useProfilesCache.js";
 import { useMarkMessagesAsRead } from "../hooks/useMarkMessagesAsRead.js";
 import ChatTopNav from "../components/chats_components/ChatTopNav.jsx";
 import SendIcon from "../../assets/images/Send-icon2.svg";
+import { UserAuth } from "../context/AuthContext.jsx";
 
 const PAGE_SIZE = 30;
 
 // ---------- UI: Single bubble ----------
-function Bubble({ mine, msg, name, avatarUrl }) {
+function Bubble({ mine, msg, name, avatarUrl, themeColor }) {
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
       {!mine && (
@@ -29,11 +30,16 @@ function Bubble({ mine, msg, name, avatarUrl }) {
         </div>
       )}
       <div
-        className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-black text-white" : "bg-white border border-veryLightGray"}`}
+        className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+          mine ? "text-white" : "bg-white border border-veryLightGray"
+        }`}
+        style={mine ? { backgroundColor: themeColor || "#000000" } : undefined}
       >
         <div>{msg.text}</div>
         <div
-          className={`text-[10px] mt-1 ${mine ? "opacity-80" : "text-gray-500"}`}
+          className={`text-[10px] mt-1 ${
+            mine ? "opacity-80" : "text-gray-500"
+          }`}
         >
           {fmtTime(msg.created_at)}
         </div>
@@ -45,6 +51,7 @@ function Bubble({ mine, msg, name, avatarUrl }) {
 // ---------- Page ----------
 export default function ChatView() {
   const { threadId } = useParams();
+  const { themeColor } = UserAuth();
 
   // auth
   const [me, setMe] = useState(null);
@@ -345,6 +352,7 @@ export default function ChatView() {
                       msg={m}
                       name={g.name}
                       avatarUrl={g.avatar_url}
+                      themeColor={themeColor}
                     />
                   ))}
                 </div>
@@ -368,7 +376,8 @@ export default function ChatView() {
         />
         <button
           type="submit"
-          className="flex w-8 h-8 justify-center items-center shrink-0 aspect-square rounded-full bg-black"
+          className="flex w-8 h-8 justify-center items-center shrink-0 aspect-square rounded-full"
+          style={{ backgroundColor: themeColor }}
         >
           <img src={SendIcon} alt="Send" className="w-4 h-4" />
         </button>

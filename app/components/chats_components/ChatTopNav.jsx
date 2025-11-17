@@ -10,11 +10,15 @@ import TopBarMenu from "../top_bar_components/TopBarMenu";
 function ChatTopNav({ title, avatarUrl }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { themeColor } = UserAuth();
 
   return (
     <>
       {/* Chats Top Bar */}
-      <div className="fixed top-0 left-0 w-full h-[60px] bg-[#3F4D54] flex items-center justify-between px-4 z-50">
+      <div
+        className="fixed top-0 left-0 w-full h-[60px] flex items-center justify-between px-4 z-50"
+        style={{ backgroundColor: themeColor }}
+      >
         {/* Back + Avatar + Name */}
         <div className="flex items-center gap-s min-w-0">
           <img

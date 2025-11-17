@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 import ChatsBox from "../components/chats_components/ChatsBox";
+import { UserAuth } from "../context/AuthContext";
 
 const searchIcon = (
   <svg
@@ -46,10 +47,11 @@ const writeMessageIcon = (
 
 function ChatsPage() {
   const [activeTab, setActiveTab] = useState("chats");
+  const { themeColor } = UserAuth();
 
   return (
     <div className="w-full flex justify-center">
-      <div className="w-full  pt-m bg-[#3F4D54]">
+      <div className="w-full  pt-m" style={{ backgroundColor: themeColor }}>
         <div className="flex px-s justify-between mb-10 items-center">
           {/* Title box */}
           <div className="text-heading1 text-white">Messages</div>
