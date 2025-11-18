@@ -302,8 +302,8 @@ const EditProfileView = () => {
                 return (
                   <div
                     key={theme.id}
-                    className={`w-9 h-9 rounded-full cursor-pointer border-2 ${
-                      isSelected ? "border-primary" : "border-transparent"
+                    className={`w-9 h-9 rounded-full cursor-pointer
+                    ${isSelected ? "ring-2 ring-yellow" : "border-transparent"
                     }`}
                     style={{ backgroundColor: theme.color }}
                     onClick={() => {
