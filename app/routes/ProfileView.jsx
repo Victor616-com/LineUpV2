@@ -192,7 +192,7 @@ const plusIcon = (
   </svg>
 );
 const ProfileView = () => {
-  const { session } = UserAuth();
+  const { session, themeColor } = UserAuth();
   const { id } = useParams(); // ✅ The profile user ID from URL
   const [profile, setProfile] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
@@ -357,7 +357,10 @@ const ProfileView = () => {
 
   return (
     <div className="pb-[110px]">
-      <div className="relative flex flex-col items-center justify-center gap-s mt-[10px] bg-profileColor1 py-m rounded-medium mx-[10px]">
+      <div
+        className="relative flex flex-col items-center justify-center gap-s mt-[10px] py-m rounded-medium mx-[10px]"
+        style={{ backgroundColor: themeColor }}
+      >
         {/* Menu Button */}
         <img
           onClick={() => setShowMenu((prev) => !prev)}
