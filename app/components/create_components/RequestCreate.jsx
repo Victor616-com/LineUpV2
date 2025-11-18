@@ -17,7 +17,7 @@ function RequestCreate() {
   const [lookingFor, setLookingFor] = useState([]);
   const [location, setLocation] = useState("");
   const [paid, setPaid] = useState(false);
-   // This is the value that has to be sent to supabase for paid_opportunity
+  // This is the value that has to be sent to supabase for paid_opportunity
   const [media, setMedia] = useState(null);
   const [error, setError] = useState(null);
 
@@ -49,9 +49,8 @@ function RequestCreate() {
     "Keyboard Player",
     "Composer",
     "Producer",
-    "Visual Artist"
+    "Visual Artist",
   ]);
-
 
   const handlePost = async () => {
     if (!session) {
@@ -59,6 +58,9 @@ function RequestCreate() {
       return;
     }
     setLoading(true);
+
+    const sendLocation = remote ? "Remote" : location;
+
     if (!title || title.trim().length === 0) {
       setError("Please enter a title");
       setLoading(false);
@@ -69,40 +71,36 @@ function RequestCreate() {
     // Has to be changed to the collab_request table and to add the necessary collumns (title, description, media_url, location, paid_opportunity(it is set as a boolean) , genres(send the tags),  ).
     // Create a media bucket for the collab request and change it in the upload media logic
     // For location you can set it so that if remote is true it sends a "remote" string, else send the location as a string
-  const { error } = await supabase.from("collab_requests").insert([
-  {
-    user_id: session.user.id,
-    title,
-    description,
-    media_url: mediaUrl,
-    genres,             
-    looking_for: lookingFor, 
-    location,
-    paid_opportunity: paid,
-  }
-]);
-
-
+    const { error } = await supabase.from("collab_requests").insert([
+      {
+        user_id: session.user.id,
+        title,
+        description,
+        media_url: mediaUrl,
+        genres,
+        looking_for: lookingFor,
+        location: sendLocation,
+        paid_opportunity: paid,
+      },
+    ]);
 
     if (error) {
-  console.error("Insert error:", error);
-  } else {
+      console.error("Insert error:", error);
+    } else {
+      setTitle("");
+      setDescription("");
+      setMedia(null);
+      setMediaUrl(null);
+      setGenres([]);
+      setLookingFor([]);
+      setLoading(false);
 
-  setTitle("");
-  setDescription("");
-  setMedia(null);
-  setMediaUrl(null);
-  setGenres([]); 
-  setLookingFor([]);
-  setLoading(false);
-
-  navigate("/collabs");
-  }
-};
+      navigate("/collabs");
+    }
+  };
 
   return (
     <div className="px-s flex flex-col gap-[25px] w-full pb-20">
-
       {/* Looking For */}
       <TagSelector
         hashTag={false}
@@ -130,7 +128,7 @@ function RequestCreate() {
           // Upload right away
           const fileName = `${Date.now()}-${file.name}`;
           const { data, error } = await supabase.storage
-            .from("notes_media") // Change to the new media bucket
+            .from("collabs_media")
             .upload(fileName, file);
 
           if (error) {
@@ -139,7 +137,7 @@ function RequestCreate() {
           }
 
           const publicUrl = supabase.storage
-            .from("notes_media") // Change to the new media bucket
+            .from("collabs_media")
             .getPublicUrl(fileName).data.publicUrl;
 
           setMediaUrl(publicUrl);
