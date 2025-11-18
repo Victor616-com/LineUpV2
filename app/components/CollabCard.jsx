@@ -3,7 +3,7 @@ import React from "react";
 // simple "x time ago" helper
 function timeAgo(dateString) {
   if (!dateString) return "";
-  const diff = Date.now() - new Date(dateString).getTime();
+  const diff = Date.now() - new Date(`${dateString}Z`).getTime();
   const mins = Math.floor(diff / 60000);
 
   if (mins < 1) return "just now";
@@ -17,48 +17,44 @@ function timeAgo(dateString) {
 export default function CollabCard({ item, user }) {
   const timeAgoText = timeAgo(item.created_at);
   const avatarSrc = user?.avatar_url
-  ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/profile_images/${user.avatar_url}`
-  : "/placeholder.png";
+    ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/profile_images/${user.avatar_url}`
+    : "/placeholder.png";
   const primaryGenre =
-  Array.isArray(item.genres) && item.genres.length > 0
-    ? item.genres[0]
-    : "collab";
+    Array.isArray(item.genres) && item.genres.length > 0
+      ? item.genres[0]
+      : "collab";
 
   const firstName = user?.name ? user.name.split(" ")[0] : "Unknown";
 
   const primaryLookingFor =
-  Array.isArray(item.looking_for) && item.looking_for.length > 0
-    ? item.looking_for[0]
-    : "musician";
-
-
-
+    Array.isArray(item.looking_for) && item.looking_for.length > 0
+      ? item.looking_for[0]
+      : "musician";
 
   return (
     <div className="bg-white rounded-[30px] p-4 shadow-sm border border-black/10 flex flex-col gap-4">
       {/* Top row: avatar + name + icon */}
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-            <img
+          <img
             src={avatarSrc || "/default-avatar.png"}
             alt="profile"
             className="w-10 h-10 rounded-full object-cover"
-            />
-            <p className="text-m text-black font-medium">
+          />
+          <p className="text-m text-black font-medium">
             {firstName} is looking for a #{primaryLookingFor}
-            </p>
+          </p>
         </div>
 
         {/* top-right icon */}
         <button className="text-black/60">
-            <img 
-                src="assets/images/save-icon.svg"
-                alt="save" 
-                className="w-7 h-7 opacity-100"
-            />
+          <img
+            src="assets/images/save-icon.svg"
+            alt="save"
+            className="w-7 h-7 opacity-100"
+          />
         </button>
-        </div>
-
+      </div>
 
       {/* separator */}
       <div className="w-full h-px bg-black/10" />
@@ -99,16 +95,14 @@ export default function CollabCard({ item, user }) {
 
       {/* buttons row */}
       <div className="flex items-center justify-between pt-2">
-        <button className="text-black font-medium text-base">
-          Read more
-        </button>
+        <button className="text-black font-medium text-base">Read more</button>
 
         <button className="flex items-center gap-2 bg-[#FFCF70] px-4 py-2.5 rounded-full text-black font-medium">
-          <img 
-                src="assets/images/chat-lines.svg"
-                alt="save" 
-                className="w-5 h-5 opacity-100"
-            />
+          <img
+            src="assets/images/chat-lines.svg"
+            alt="save"
+            className="w-5 h-5 opacity-100"
+          />
           Start a chat
         </button>
       </div>

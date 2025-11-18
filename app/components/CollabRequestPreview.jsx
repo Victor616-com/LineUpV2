@@ -1,4 +1,8 @@
 import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabaseClient";
+import { UserAuth } from "../context/AuthContext";
+
 import CollabRequestPreviewCard from "./CollabRequestPreviewCard";
 import YellowBtn from "./YellowBtn";
 
@@ -29,6 +33,52 @@ const plusIcon = (
 
 function CollabRequestPreview() {
   const navigate = useNavigate();
+  const { session } = UserAuth();
+  const [requests, setRequests] = useState([]);
+  useEffect(() => {
+    const fetchRequests = async () => {
+      const { data, error } = await supabase
+        .from("collab_requests ")
+        .select(
+          `
+            id,
+            title,
+            description,
+            created_at,
+            user_id,
+            location,
+            looking_for,
+            profiles!inner(name, avatar_url)
+          `,
+        )
+        .order("created_at", { ascending: false })
+        .limit(4);
+
+      if (error) {
+        console.error("Error fetching requests:", error);
+        return;
+      }
+
+      const formatted = data.map((request) => ({
+        id: request.id,
+        title: request.title,
+        description: request.description,
+        created_at: request.created_at,
+        user_id: request.user_id,
+        location: request.location,
+        looking_for: request.looking_for,
+        name: request.profiles?.name,
+        avatar_url: request.profiles?.avatar_url,
+      }));
+
+      setRequests(formatted);
+
+      const userRequests = formatted.filter(
+        (request) => request.user_id === session?.user?.id,
+      );
+    };
+    fetchRequests();
+  }, [session]);
 
   const handleCreateClick = () => {
     navigate("/create", { state: { selected: "request" } });
@@ -38,14 +88,18 @@ function CollabRequestPreview() {
       <p className="text-m text-center">Collaboration requests for you</p>
       <div className="px-s w-full overflow-x-auto no-scrollbar">
         <div className="flex flex-row flex-nowrap w-fit gap-3 py-1">
-          <CollabRequestPreviewCard />
-          <CollabRequestPreviewCard />
-          <CollabRequestPreviewCard />
-          <CollabRequestPreviewCard />
+          {requests.map((request) => (
+            <div key={request.id}>
+              <CollabRequestPreviewCard request={request} />
+            </div>
+          ))}
         </div>
       </div>
       <div className="flex flex-row justify-between px-s">
-        <button className="border border-yellow px-[10px] rounded-full text-m">
+        <button
+          className="border border-yellow px-[10px] rounded-full text-m"
+          onClick={() => navigate("/collabs")}
+        >
           See more
         </button>
         <YellowBtn className="text-m text-black" onClick={handleCreateClick}>
