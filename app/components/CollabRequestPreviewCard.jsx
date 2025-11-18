@@ -19,6 +19,12 @@ function CollabRequestPreviewCard({ request }) {
   const navigate = useNavigate();
 
   const timeAgoText = timeAgo(request.created_at);
+
+  const primaryLookingFor =
+    Array.isArray(request.looking_for) && request.looking_for.length > 0
+      ? request.looking_for[0]
+      : "musician";
+
   return (
     <div className="w-[340px] h-[235px] flex flex-col items-center bg-white p-s rounded-small gap-xs">
       <div className="flex flex-row w-full gap-xxs items-center">
@@ -34,7 +40,7 @@ function CollabRequestPreviewCard({ request }) {
         <div className="flex flex-row gap-1">
           <p className="text-xs">{request.name}</p>
           <p className="text-xs">looking for a</p>
-          <p className="text-xs">#{request.looking_for?.[0] || ""}</p>
+          <p className="text-xs">#{primaryLookingFor}</p>
         </div>
       </div>
       <div className="w-[80%] h-px bg-[#dadada]"></div>
