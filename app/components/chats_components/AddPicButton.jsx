@@ -56,7 +56,7 @@ export default function AddPicButton({
       <button
         type="button"
         onClick={openFilePicker}
-        className="relative flex w-8 h-8 justify-center items-center shrink-0 
+        className="relative flex w-11 h-11 justify-center items-center shrink-0 
                   aspect-square rounded-full overflow-hidden"
         style={{ backgroundColor: themeColor }}
       >
@@ -80,8 +80,8 @@ export default function AddPicButton({
         {/* error icon */}
         {isError && (
           <svg
-            width="16"
-            height="16"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="white"
@@ -98,14 +98,14 @@ export default function AddPicButton({
 
         {/* loading spinner */}
         {!isError && isLoading && (
-          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full z-10" />
+          <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full z-10" />
         )}
 
         {/* success check */}
         {!isError && !isLoading && isDone && (
           <svg
-            width="16"
-            height="16"
+            width="24"
+            height="24"
             viewBox="0 0 24 24"
             fill="none"
             stroke="white"
@@ -121,8 +121,8 @@ export default function AddPicButton({
         {/* default plus icon */}
         {!preview && !isLoading && !isDone && !isError && (
           <svg
-            width="14"
-            height="14"
+            width="16"
+            height="16"
             viewBox="0 0 14 14"
             fill="none"
             stroke="white"

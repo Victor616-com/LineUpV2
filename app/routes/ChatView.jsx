@@ -507,8 +507,9 @@ export default function ChatView() {
           bottom-0 left-0 right-0
           z-20
           p-3
-          flex items-center gap-2
+          flex items-end gap-2
           bg-white
+          
         "
       >
         {/* Add pic button */}
@@ -523,20 +524,33 @@ export default function ChatView() {
         />
 
         {/* Text input */}
-        <input
+        <textarea
+          rows={1}
           value={text}
-          onChange={(e) => setText(e.target.value)}
           placeholder="Type a message…"
-          className="flex-1 border border-veryLightGray bg-white rounded-xl px-3 py-2 items-center text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          onChange={(e) => {
+            // Auto-grow
+            e.target.style.height = "44px";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+            setText(e.target.value);
+          }}
+          className="flex-1 border border-veryLightGray bg-white rounded-xl px-3 py-2
+               text-sm resize-none overflow-hidden focus:outline-none
+               focus:ring-2"
+          style={{
+            height: "44px",
+            // add theme ring color
+            "--tw-ring-color": themeColor,
+          }}
         />
 
         {/* Send */}
         <button
           type="submit"
-          className="flex w-8 h-8 justify-center items-center shrink-0 aspect-square rounded-full"
+          className="flex w-11 h-11 justify-center items-center shrink-0 aspect-square rounded-full"
           style={{ backgroundColor: themeColor }}
         >
-          <img src={SendIcon} alt="Send" className="w-4 h-4" />
+          <img src={SendIcon} alt="Send" className="w-5 h-5" />
         </button>
       </form>
     </div>
