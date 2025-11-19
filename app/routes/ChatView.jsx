@@ -7,6 +7,7 @@ import { useMarkMessagesAsRead } from "../hooks/useMarkMessagesAsRead.js";
 import ChatTopNav from "../components/chats_components/ChatTopNav.jsx";
 import SendIcon from "../../assets/images/Send-icon2.svg";
 import { UserAuth } from "../context/AuthContext.jsx";
+import AddPicButton from "../components/chats_components/AddPicButton.jsx";
 
 const PAGE_SIZE = 30;
 
@@ -35,7 +36,20 @@ function Bubble({ mine, msg, name, avatarUrl, themeColor }) {
         }`}
         style={mine ? { backgroundColor: themeColor || "#000000" } : undefined}
       >
-        <div>{msg.text}</div>
+        {/* Image (if any) */}
+        {msg.media_url && (
+          <div className="mb-1">
+            <img
+              src={msg.media_url}
+              alt="attachment"
+              className="max-h-48 rounded-xl object-cover"
+            />
+          </div>
+        )}
+
+        {/* Text (optional if only image) */}
+        {msg.text && <div>{msg.text}</div>}
+
         <div
           className={`text-[10px] mt-1 ${
             mine ? "opacity-80" : "text-gray-500"
@@ -65,6 +79,11 @@ export default function ChatView() {
 
   // compose state
   const [text, setText] = useState("");
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaUrl, setMediaUrl] = useState(null);
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
+  const [isMediaReady, setIsMediaReady] = useState(false);
+  const [mediaResetKey, setMediaResetKey] = useState(0); // to reset AddPicButton
 
   // DOM refs
   const listRef = useRef(null);
@@ -83,7 +102,7 @@ export default function ChatView() {
   async function fetchPage({ before = null } = {}) {
     let q = supabase
       .from("messages")
-      .select("id, thread_id, sender_id, text, created_at")
+      .select("id, thread_id, sender_id, text, media_url, created_at") // ⬅ added media_url
       .eq("thread_id", threadId)
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE);
@@ -197,11 +216,51 @@ export default function ChatView() {
     }
     return (data?.length || 0) > 0;
   }
+  // Handle media selection (from AddPicButton)
+
+  async function handleSelectMedia(file) {
+    if (!me) {
+      alert("Not authenticated");
+      return;
+    }
+
+    setMediaFile(file);
+    setIsMediaUploading(true);
+    setIsMediaReady(false);
+
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${me}/${threadId}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("chat_media")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      setIsMediaUploading(false);
+      setMediaFile(null);
+      alert("Failed to upload image");
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("chat_media").getPublicUrl(path);
+
+    setMediaUrl(publicUrl);
+    setIsMediaUploading(false);
+    setIsMediaReady(true);
+  }
 
   async function sendMessage(e) {
     e?.preventDefault();
     const body = text.trim();
-    if (!body) return;
+
+    // must have either text or image
+    if (!body && !mediaUrl) return;
 
     if (!me) return alert("Not authenticated");
     if (!UUID_RE.test(threadId)) {
@@ -215,10 +274,15 @@ export default function ChatView() {
     const { data, error, status } = await supabase
       .from("messages")
       .insert(
-        { thread_id: threadId, sender_id: me, text: body },
+        {
+          thread_id: threadId,
+          sender_id: me,
+          text: body || "",
+          media_url: mediaUrl || null, // new
+        },
         { count: "exact" },
       )
-      .select("id, thread_id, created_at") // forces PostgREST to return detailed errors
+      .select("id, thread_id, created_at")
       .single();
 
     if (error) {
@@ -227,7 +291,12 @@ export default function ChatView() {
       return;
     }
 
+    // reset composer
     setText("");
+    setMediaFile(null);
+    setMediaUrl(null);
+    setIsMediaReady(false);
+    setMediaResetKey((k) => k + 1); // to reset AddPicButton
   }
 
   // ---------- 5.b Mark messages as read ----------
@@ -368,12 +437,24 @@ export default function ChatView() {
         onSubmit={sendMessage}
         className="p-3 border-t border-veryLightGray flex items-center gap-2 bg-white"
       >
+        {/* Add pic */}
+        <AddPicButton
+          themeColor={themeColor}
+          onSelect={handleSelectMedia}
+          isLoading={isMediaUploading}
+          isDone={isMediaReady}
+          resetKey={mediaResetKey}
+        />
+
+        {/* Text input */}
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message…"
           className="flex-1 border border-veryLightGray rounded-xl px-3 py-2 items-center text-sm focus:outline-none focus:ring-2 focus:ring-black"
         />
+
+        {/* Send */}
         <button
           type="submit"
           className="flex w-8 h-8 justify-center items-center shrink-0 aspect-square rounded-full"
