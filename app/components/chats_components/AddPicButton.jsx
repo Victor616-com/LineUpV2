@@ -6,13 +6,23 @@ export default function AddPicButton({
   onSelect,
   isLoading,
   isDone,
-  resetKey, // 👈 new
+  isError, // 👈 new
+  onRetry, // 👈 new
+  resetKey, // existing
 }) {
   const fileRef = useRef(null);
   const [preview, setPreview] = useState(null);
 
   const openFilePicker = () => {
-    if (!isLoading) fileRef.current.click();
+    if (isLoading) return;
+
+    // In error state → tap = retry
+    if (isError && onRetry) {
+      onRetry();
+      return;
+    }
+
+    if (fileRef.current) fileRef.current.click();
   };
 
   const handleChange = (e) => {
@@ -31,7 +41,7 @@ export default function AddPicButton({
     };
   }, [preview]);
 
-  // 🔁 reset when parent changes resetKey
+  // reset when parent changes resetKey
   useEffect(() => {
     if (!resetKey) return;
     if (preview) {
@@ -39,7 +49,7 @@ export default function AddPicButton({
     }
     setPreview(null);
     if (fileRef.current) fileRef.current.value = null;
-  }, [resetKey]); // runs when resetKey increments
+  }, [resetKey]);
 
   return (
     <>
@@ -58,15 +68,41 @@ export default function AddPicButton({
           />
         )}
 
-        {(isLoading || isDone) && preview && (
-          <div className="absolute inset-0 bg-black/35" />
+        {/* overlay for loading / done / error */}
+        {(isLoading || isDone || isError) && preview && (
+          <div
+            className={
+              "absolute inset-0 " + (isError ? "bg-red-600/50" : "bg-black/35")
+            }
+          />
         )}
 
-        {isLoading && (
-          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full z-10"></div>
+        {/* error icon */}
+        {isError && (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="z-10"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="13" />
+            <circle cx="12" cy="16.5" r="0.8" />
+          </svg>
         )}
 
-        {!isLoading && isDone && (
+        {/* loading spinner */}
+        {!isError && isLoading && (
+          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full z-10" />
+        )}
+
+        {/* success check */}
+        {!isError && !isLoading && isDone && (
           <svg
             width="16"
             height="16"
@@ -82,7 +118,8 @@ export default function AddPicButton({
           </svg>
         )}
 
-        {!preview && !isLoading && !isDone && (
+        {/* default plus icon */}
+        {!preview && !isLoading && !isDone && !isError && (
           <svg
             width="14"
             height="14"
