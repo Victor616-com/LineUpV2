@@ -4,6 +4,8 @@ const AuthContext = createContext(null);
 
 export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(undefined);
+
+  // Functions for the theme colors
   const [themeId, setThemeId] = useState(null);
   const themeColors = {
     1: "#1E1E1E",
