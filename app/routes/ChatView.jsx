@@ -11,10 +11,11 @@ import AddPicButton from "../components/chats_components/AddPicButton.jsx";
 
 const PAGE_SIZE = 30;
 
-// ---------- UI: Single bubble ----------
+// ---------- Message Bubble ----------
 function Bubble({ mine, msg, name, avatarUrl, themeColor }) {
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+      {/* Avatar (others only) */}
       {!mine && (
         <div className="mr-2">
           {avatarUrl ? (
@@ -30,29 +31,37 @@ function Bubble({ mine, msg, name, avatarUrl, themeColor }) {
           )}
         </div>
       )}
-      <div
-        className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-          mine ? "text-white" : "bg-white border border-veryLightGray"
-        }`}
-        style={mine ? { backgroundColor: themeColor || "#000000" } : undefined}
-      >
-        {/* Image (if any) */}
-        {msg.media_url && (
-          <div className="mb-1">
-            <img
-              src={msg.media_url}
-              alt="attachment"
-              className="max-h-48 rounded-xl object-cover"
-            />
-          </div>
-        )}
 
-        {/* Text (optional if only image) */}
-        {msg.text && <div>{msg.text}</div>}
-
+      {/* Bubble + timestamp */}
+      <div className="flex flex-col max-w-[75%]">
+        {/* Bubble */}
         <div
-          className={`text-[10px] mt-1 ${
-            mine ? "opacity-80" : "text-gray-500"
+          className={`rounded-2xl p-xs text-sm break-words ${
+            mine
+              ? "text-white self-end"
+              : "bg-white border border-veryLightGray self-start"
+          }`}
+          style={
+            mine ? { backgroundColor: themeColor || "#000000" } : undefined
+          }
+        >
+          {msg.media_url && (
+            <div className="mb-1">
+              <img
+                src={msg.media_url}
+                alt="attachment"
+                className="max-h-48 rounded-xl object-cover"
+              />
+            </div>
+          )}
+
+          {msg.text && <div>{msg.text}</div>}
+        </div>
+
+        {/* Timestamp */}
+        <div
+          className={`text-[10px] mt-1 text-gray-500 ${
+            mine ? "self-end" : "self-start"
           }`}
         >
           {fmtTime(msg.created_at)}
@@ -67,25 +76,28 @@ export default function ChatView() {
   const { threadId } = useParams();
   const { themeColor } = UserAuth();
 
-  // auth
+  // --- Auth ---
   const [me, setMe] = useState(null);
 
-  // messages (kept in ASC by created_at)
+  // --- Messages state (kept in ASC by created_at) ---
   const [messages, setMessages] = useState([]);
 
-  // paging state
+  // --- Paging state ---
   const [oldestLoadedAt, setOldestLoadedAt] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
-  // compose state
+  // --- Composer state ---
   const [text, setText] = useState("");
-  const [mediaFile, setMediaFile] = useState(null);
-  const [mediaUrl, setMediaUrl] = useState(null);
+
+  // Media-related state for the composer
+  const [mediaFile, setMediaFile] = useState(null); // raw File object
+  const [mediaUrl, setMediaUrl] = useState(null); // public URL from Supabase
   const [isMediaUploading, setIsMediaUploading] = useState(false);
-  const [isMediaReady, setIsMediaReady] = useState(false);
+  const [isMediaReady, setIsMediaReady] = useState(false); // upload succeeded
+  const [isMediaError, setIsMediaError] = useState(false); // upload failed
   const [mediaResetKey, setMediaResetKey] = useState(0); // to reset AddPicButton
 
-  // DOM refs
+  // --- DOM refs ---
   const listRef = useRef(null);
   const bottomRef = useRef(null);
   const isLoadingMoreRef = useRef(false);
@@ -98,15 +110,32 @@ export default function ChatView() {
     })();
   }, []);
 
-  // ---------- 2) Fetch one page (newest-first -> reverse to oldest-first) ----------
+  // ---------- Helper: ensure user is participant in thread ----------
+  async function ensureIAmParticipant(tid, uid) {
+    const { data, error } = await supabase
+      .from("thread_participants")
+      .select("thread_id")
+      .eq("thread_id", tid)
+      .eq("user_id", uid)
+      .limit(1);
+
+    if (error) {
+      console.error("participant check error:", error);
+      return false;
+    }
+    return (data?.length || 0) > 0;
+  }
+
+  // ---------- Helper: fetch one page of messages ----------
   async function fetchPage({ before = null } = {}) {
     let q = supabase
       .from("messages")
-      .select("id, thread_id, sender_id, text, media_url, created_at") // ⬅ added media_url
+      .select("id, thread_id, sender_id, text, media_url, created_at")
       .eq("thread_id", threadId)
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE);
 
+    // If we have an "oldestLoadedAt", fetch older messages
     if (before) q = q.lt("created_at", before);
 
     const { data, error } = await q;
@@ -117,16 +146,17 @@ export default function ChatView() {
 
     const rows = (data || []).map((r) => ({
       ...r,
-      // placeholders; will be filled by the profiles cache
+      // placeholders; will be filled by profiles cache
       name: undefined,
       avatar_url: null,
     }));
 
-    rows.reverse(); // ASC for rendering/grouping
+    // reverse to ASC for display and grouping
+    rows.reverse();
     return rows;
   }
 
-  // ---------- 3) Initial load + realtime subscription ----------
+  // ---------- 2) Initial load + realtime subscription ----------
   useEffect(() => {
     if (!threadId) return;
 
@@ -135,14 +165,15 @@ export default function ChatView() {
       setMessages(page);
       setOldestLoadedAt(page.length ? page[0].created_at : null);
       setHasMore(page.length === PAGE_SIZE);
-      // jump to bottom after initial load
+
+      // scroll to bottom after initial load
       setTimeout(
         () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
         0,
       );
     })();
 
-    // Realtime: append new messages (only if user can select via RLS)
+    // Realtime: append new messages
     const channel = supabase
       .channel(`chat-${threadId}`)
       .on(
@@ -156,10 +187,11 @@ export default function ChatView() {
         (payload) => {
           const m = payload.new;
           setMessages((prev) => {
-            if (prev.some((x) => x.id === m.id)) return prev;
+            if (prev.some((x) => x.id === m.id)) return prev; // avoid dupes
             return [...prev, { ...m, name: undefined, avatar_url: null }];
           });
-          // auto-scroll on arrival
+
+          // auto-scroll on new message
           setTimeout(
             () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
             0,
@@ -170,24 +202,28 @@ export default function ChatView() {
 
     return () => {
       channel.unsubscribe();
-      // supabase.removeChannel?.(channel); // uncomment if using v2 API that supports this
+      // supabase.removeChannel?.(channel); // if needed for your supabase version
     };
   }, [threadId]);
 
-  // ---------- 4) Infinite scroll up to load older messages ----------
+  // ---------- 3) Infinite scroll up to load older messages ----------
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
 
     async function onScroll() {
       if (isLoadingMoreRef.current || !hasMore) return;
+
+      // When user pulls to top, fetch older page
       if (el.scrollTop <= 0) {
         isLoadingMoreRef.current = true;
         const prevHeight = el.scrollHeight;
+
         const page = await fetchPage({ before: oldestLoadedAt });
         setMessages((cur) => [...page, ...cur]);
         setOldestLoadedAt(page.length ? page[0].created_at : oldestLoadedAt);
         setHasMore(page.length === PAGE_SIZE);
+
         // keep viewport anchored after prepend
         setTimeout(() => {
           const newHeight = el.scrollHeight;
@@ -201,32 +237,18 @@ export default function ChatView() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [hasMore, oldestLoadedAt]);
 
-  // ---------- 5) Send a message ----------
+  // ---------- 4) Media upload helpers ----------
 
-  async function ensureIAmParticipant(tid, uid) {
-    const { data, error } = await supabase
-      .from("thread_participants")
-      .select("thread_id")
-      .eq("thread_id", tid)
-      .eq("user_id", uid)
-      .limit(1);
-    if (error) {
-      console.error("participant check error:", error);
-      return false;
-    }
-    return (data?.length || 0) > 0;
-  }
-  // Handle media selection (from AddPicButton)
-
-  async function handleSelectMedia(file) {
+  // Centralized upload function so we can reuse it for "retry"
+  async function uploadMedia(file) {
     if (!me) {
       alert("Not authenticated");
       return;
     }
 
-    setMediaFile(file);
     setIsMediaUploading(true);
     setIsMediaReady(false);
+    setIsMediaError(false); // clear previous error state
 
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${me}/${threadId}/${Date.now()}.${ext}`;
@@ -241,8 +263,8 @@ export default function ChatView() {
     if (uploadError) {
       console.error("Upload error:", uploadError);
       setIsMediaUploading(false);
-      setMediaFile(null);
-      alert("Failed to upload image");
+      setIsMediaError(true); // mark error so button + message can react
+      // keep mediaFile so user can retry
       return;
     }
 
@@ -253,13 +275,28 @@ export default function ChatView() {
     setMediaUrl(publicUrl);
     setIsMediaUploading(false);
     setIsMediaReady(true);
+    setIsMediaError(false);
   }
 
+  // Called by AddPicButton when user selects a file
+  async function handleSelectMedia(file) {
+    if (!file) return;
+    setMediaFile(file);
+    await uploadMedia(file);
+  }
+
+  // Called by AddPicButton when user taps the button in error state
+  async function handleRetryUpload() {
+    if (!mediaFile || isMediaUploading) return;
+    await uploadMedia(mediaFile);
+  }
+
+  // ---------- 5) Send a message ----------
   async function sendMessage(e) {
     e?.preventDefault();
     const body = text.trim();
 
-    // must have either text or image
+    // Must have either text or image attached
     if (!body && !mediaUrl) return;
 
     if (!me) return alert("Not authenticated");
@@ -278,7 +315,7 @@ export default function ChatView() {
           thread_id: threadId,
           sender_id: me,
           text: body || "",
-          media_url: mediaUrl || null, // new
+          media_url: mediaUrl || null,
         },
         { count: "exact" },
       )
@@ -291,21 +328,22 @@ export default function ChatView() {
       return;
     }
 
-    // reset composer
+    // Reset composer after successful send
     setText("");
     setMediaFile(null);
     setMediaUrl(null);
     setIsMediaReady(false);
-    setMediaResetKey((k) => k + 1); // to reset AddPicButton
+    setIsMediaError(false);
+    setMediaResetKey((k) => k + 1); // tell AddPicButton to clear preview
   }
 
-  // ---------- 5.b Mark messages as read ----------
+  // ---------- 6) Mark messages as read ----------
   useMarkMessagesAsRead(messages, me);
 
-  // ---------- 6) Profiles cache ----------
+  // ---------- 7) Profiles cache ----------
   const profilesById = useProfilesCache(messages);
 
-  // ---------- 7) Group messages by day, then by consecutive sender ----------
+  // ---------- 8) Group messages by day, then by consecutive sender ----------
   const grouped = useMemo(() => {
     const days = [];
     let dayBucket = null;
@@ -319,11 +357,14 @@ export default function ChatView() {
         avatar_url: prof?.avatar_url ?? raw.avatar_url ?? null,
       };
 
+      // New day bucket
       if (!dayBucket || !sameDay(dayBucket.day, msg.created_at)) {
         dayBucket = { day: msg.created_at, groups: [] };
         days.push(dayBucket);
         lastSender = null;
       }
+
+      // New sender group
       if (!lastSender || lastSender !== msg.sender_id) {
         dayBucket.groups.push({
           sender_id: msg.sender_id,
@@ -333,13 +374,14 @@ export default function ChatView() {
         });
         lastSender = msg.sender_id;
       } else {
+        // Same sender, append to last group
         dayBucket.groups[dayBucket.groups.length - 1].items.push(msg);
       }
     }
     return days;
   }, [messages, profilesById]);
 
-  // ----- Chat title -----
+  // ---------- 9) Chat title ----------
   const chatTitle = useMemo(() => {
     if (!me) return "Chat";
 
@@ -360,8 +402,7 @@ export default function ChatView() {
     return Array.from(names).join(", ");
   }, [messages, profilesById, me]);
 
-  // chat Avatar URL (first non-me message)
-
+  // ---------- 10) Chat avatar (first non-me message) ----------
   const otherAvatar = useMemo(() => {
     if (!me) return null;
 
@@ -377,13 +418,25 @@ export default function ChatView() {
 
   // ---------- Render ----------
   return (
-    <div className="flex flex-col h-dvh pt-0">
-      {/* Top Nav */}
-      <ChatTopNav title={chatTitle} avatarUrl={otherAvatar} />
-      {/* History */}
+    <div className="relative h-dvh bg-gray-50">
+      {/* Top Nav - fixed */}
+      <div className="fixed top-0 left-0 right-0 z-20 bg-white border-b border-veryLightGray">
+        <ChatTopNav title={chatTitle} avatarUrl={otherAvatar} />
+      </div>
+
+      {/* History (scroll area between top bar and composer) */}
       <div
         ref={listRef}
-        className="flex-1 overflow-y-auto p-3 pb-10 bg-gray-50 "
+        className="
+          absolute
+          left-0 right-0
+          overflow-y-auto
+          pt-[56px]        /* height of top nav */
+          pb-[88px]        /* room for composer + a bit extra */
+          h-dvh
+          p-3
+          bg-gray-50
+        "
       >
         {hasMore && (
           <div className="text-center text-xs text-gray-500 mb-2">
@@ -402,18 +455,24 @@ export default function ChatView() {
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
+            {/* Message groups by sender */}
             {day.groups.map((g, i) => {
               const mine = g.sender_id === me;
               return (
                 <div
                   key={i}
-                  className={`mt-2 space-y-1 ${mine ? "text-right" : "text-left"}`}
+                  className={`mt-2 space-y-1 ${
+                    mine ? "text-right" : "text-left"
+                  }`}
                 >
+                  {/* Sender name above group for others */}
                   {!mine && (
                     <div className="ml-9 mb-1 text-[11px] text-gray-600">
                       {g.name || "User"}
                     </div>
                   )}
+
+                  {/* Individual bubbles inside group */}
                   {g.items.map((m) => (
                     <Bubble
                       key={m.id}
@@ -429,20 +488,37 @@ export default function ChatView() {
             })}
           </div>
         ))}
+
+        {/* Error text inside scroll area, above bottom padding */}
+        {isMediaError && (
+          <div className="px-1 pb-2 text-[11px] text-red-600">
+            Couldn’t upload. Check your connection and tap again.
+          </div>
+        )}
+
         <div ref={bottomRef} className="h-2" />
       </div>
 
-      {/* Composer */}
+      {/* Composer - fixed at bottom */}
       <form
         onSubmit={sendMessage}
-        className="p-3 border-t border-veryLightGray flex items-center gap-2 bg-white"
+        className="
+          fixed
+          bottom-0 left-0 right-0
+          z-20
+          p-3
+          flex items-center gap-2
+          bg-white
+        "
       >
-        {/* Add pic */}
+        {/* Add pic button */}
         <AddPicButton
           themeColor={themeColor}
           onSelect={handleSelectMedia}
           isLoading={isMediaUploading}
           isDone={isMediaReady}
+          isError={isMediaError}
+          onRetry={handleRetryUpload}
           resetKey={mediaResetKey}
         />
 
@@ -451,7 +527,7 @@ export default function ChatView() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message…"
-          className="flex-1 border border-veryLightGray rounded-xl px-3 py-2 items-center text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          className="flex-1 border border-veryLightGray bg-white rounded-xl px-3 py-2 items-center text-sm focus:outline-none focus:ring-2 focus:ring-black"
         />
 
         {/* Send */}
